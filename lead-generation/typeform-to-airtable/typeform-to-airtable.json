@@ -1,5 +1,5 @@
 {
-  "name": "Lead Loop Starter - Typeform to Airtable with Email",
+  "name": "Lead Capture",
   "nodes": [
     {
       "parameters": {
@@ -7,8 +7,6 @@
         "path": "typeform-leads",
         "responseMode": "responseNode",
         "options": {
-          "responseContentType": "application/json",
-          "responsePropertyName": "data",
           "responseHeaders": {
             "entries": [
               {
@@ -19,216 +17,317 @@
           }
         }
       },
-      "id": "e1b0f3d4-8c9a-4b2e-9f3d-1a2b3c4d5e6f",
-      "name": "Webhook - Typeform Trigger",
+      "id": "47f83052-4daf-402a-99d5-60b99755bc57",
+      "name": "Webhook - Typeform Trigger1",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
-      "position": [250, 300],
+      "position": [
+        -940,
+        520
+      ],
       "webhookId": "typeform-lead-capture"
     },
     {
       "parameters": {
-        "values": {
-          "string": [
-            {
-              "name": "name",
-              "value": "={{ $json.form_response.answers.find(item => item.field.ref === 'name_field')?.text || $json.form_response.answers.find(item => item.type === 'short_text')?.short_text || 'Unknown' }}"
-            },
+        "fields": {
+          "values": [
             {
               "name": "email",
-              "value": "={{ $json.form_response.answers.find(item => item.field.ref === 'email_field')?.email || $json.form_response.answers.find(item => item.type === 'email')?.email || '' }}"
+              "stringValue": "={{ $json.body.form_response.answers.find(answer => answer.type === 'email')?.email }}\n"
             },
             {
-              "name": "interest",
-              "value": "={{ $json.form_response.answers.find(item => item.field.ref === 'interest_field')?.choice?.label || $json.form_response.answers.find(item => item.type === 'choice')?.choice?.label || 'General Inquiry' }}"
+              "name": "firstName",
+              "stringValue": "={{ $json.body.form_response.answers[0]?.text"
             },
             {
-              "name": "source",
-              "value": "={{ $json.form_response.hidden?.source || 'Typeform Direct' }}"
+              "name": "company",
+              "stringValue": "={{ $json.body.form_response.answers[4]?.text"
             },
             {
-              "name": "submitted_at",
-              "value": "={{ $json.form_response.submitted_at }}"
-            },
-            {
-              "name": "form_id",
-              "value": "={{ $json.form_response.form_id }}"
+              "name": "phoneNumber",
+              "stringValue": "={{ $json.body.form_response.answers.find(a => a.type === 'phone_number')?.phone_number }}"
             }
           ]
         },
         "options": {}
       },
-      "id": "a2c3d4e5-f6g7-h8i9-j0k1-l2m3n4o5p6q7",
-      "name": "Extract & Format Lead Data",
+      "id": "d37c9504-7adf-436c-935f-fd6f48ab07e4",
+      "name": "Extract & Format Lead Data1",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3,
-      "position": [450, 300]
+      "position": [
+        -740,
+        520
+      ]
     },
     {
       "parameters": {
         "conditions": {
           "string": [
             {
-              "value1": "={{ $json.email }}",
+              "value1": "={{ $json.email.trim() }}",
               "operation": "regex",
               "value2": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
             }
           ]
         }
       },
-      "id": "b3d4e5f6-g7h8-i9j0-k1l2-m3n4o5p6q7r8",
-      "name": "Validate Email Format",
+      "id": "f02b8b94-ae03-414d-82d4-bace62008176",
+      "name": "Validate Email Format1",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
-      "position": [650, 300]
+      "position": [
+        -540,
+        520
+      ]
     },
     {
       "parameters": {
         "operation": "create",
         "base": {
           "__rl": true,
-          "value": "YOUR_AIRTABLE_BASE_ID",
-          "mode": "list"
+          "value": "appBt6LfBOSQsrqe9",
+          "mode": "list",
+          "cachedResultName": "Lead Management",
+          "cachedResultUrl": "https://airtable.com/appBt6LfBOSQsrqe9"
         },
         "table": {
           "__rl": true,
-          "value": "Leads",
-          "mode": "list"
+          "value": "tbl20AaG9jIpQStHh",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://airtable.com/appBt6LfBOSQsrqe9/tbl20AaG9jIpQStHh"
         },
-        "options": {
-          "returnFields": [
-            "id",
-            "Name",
-            "Email",
-            "Status"
-          ]
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Contacted": false,
+            "Name": "={{$json[\"fullName\"]}}",
+            "Email": "{{$json[\"email\"]}}",
+            "Business Name": "{{$json[\"businessName\"]}}",
+            "Main Goal": "{{$json[\"mainGoal\"]}}",
+            "Lead Source": "Supabase Form",
+            "Package Interest": "={{$json[\"packageInterest\"]}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Business Name",
+              "displayName": "Business Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Package Interest",
+              "displayName": "Package Interest",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Basic",
+                  "value": "Basic"
+                },
+                {
+                  "name": "Standard",
+                  "value": "Standard"
+                },
+                {
+                  "name": "Premium",
+                  "value": "Premium"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Main Goal",
+              "displayName": "Main Goal",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Lead Source",
+              "displayName": "Lead Source",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Contacted",
+              "displayName": "Contacted",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Follow-up Date",
+              "displayName": "Follow-up Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Days Since Contacted",
+              "displayName": "Days Since Contacted",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Lead Score",
+              "displayName": "Lead Score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Suggested Next Action",
+              "displayName": "Suggested Next Action",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
         },
-        "fields": {
-          "fieldsUi": {
-            "fieldValues": [
-              {
-                "fieldName": "Name",
-                "fieldValue": "={{ $json.name }}"
-              },
-              {
-                "fieldName": "Email",
-                "fieldValue": "={{ $json.email }}"
-              },
-              {
-                "fieldName": "Interest",
-                "fieldValue": "={{ $json.interest }}"
-              },
-              {
-                "fieldName": "Source",
-                "fieldValue": "={{ $json.source }}"
-              },
-              {
-                "fieldName": "Submitted At",
-                "fieldValue": "={{ $json.submitted_at }}"
-              },
-              {
-                "fieldName": "Status",
-                "fieldValue": "New"
-              }
-            ]
-          }
-        }
+        "options": {}
       },
-      "id": "c4e5f6g7-h8i9-j0k1-l2m3-n4o5p6q7r8s9",
-      "name": "Create Lead in Airtable",
+      "id": "bc505067-cfbc-47f5-9a1c-0f3d6d0bb889",
+      "name": "Create Lead in Airtable1",
       "type": "n8n-nodes-base.airtable",
       "typeVersion": 2,
-      "position": [850, 200],
+      "position": [
+        -340,
+        420
+      ],
       "credentials": {
-        "airtableApi": {
-          "id": "1",
-          "name": "Airtable API"
+        "airtableTokenApi": {
+          "id": "bNmH8B242tsq8lrS",
+          "name": "Airtable Personal Access Token account"
         }
       }
     },
     {
       "parameters": {
-        "fromEmail": "={{ $credentials.email }}",
-        "toEmail": "={{ $node['Extract & Format Lead Data'].json.email }}",
-        "subject": "Welcome {{ $node['Extract & Format Lead Data'].json.name }}! Thanks for your interest",
-        "text": "Hi {{ $node['Extract & Format Lead Data'].json.name }},\n\nThank you for your interest in {{ $node['Extract & Format Lead Data'].json.interest }}!\n\nWe're excited to connect with you and will follow up soon with more information tailored to your specific needs.\n\nIn the meantime, feel free to reply to this email if you have any immediate questions.\n\nBest regards,\n[Your Team Name]",
-        "options": {
-          "replyTo": "support@yourcompany.com"
-        }
+        "sendTo": "={{ $node['Extract & Format Lead Data1'].json.email }}",
+        "subject": "Welcome! Thanks for your interest",
+        "message": "Hi there,  Thank you for your interest! We're excited to connect with you and will follow up soon with more information tailored to your needs.  In the meantime, feel free to reply to this email if you have any questions.  Best regards,   The Team",
+        "options": {}
       },
-      "id": "d5f6g7h8-i9j0-k1l2-m3n4-o5p6q7r8s9t0",
-      "name": "Send Welcome Email",
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2,
-      "position": [1050, 200],
+      "id": "563493ba-386d-4456-8c3e-564c35649bc9",
+      "name": "Send Welcome Email1",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -140,
+        420
+      ],
+      "webhookId": "189b8ac6-5629-4cc9-80e5-6b9d6d0db067",
       "credentials": {
-        "smtp": {
-          "id": "2",
-          "name": "Email SMTP"
+        "gmailOAuth2": {
+          "id": "bptiRYBvQOqmJVa9",
+          "name": "Gmail account"
         }
       }
     },
     {
       "parameters": {
-        "values": {
-          "string": [
-            {
-              "name": "status",
-              "value": "success"
-            },
-            {
-              "name": "message",
-              "value": "Lead captured and email sent successfully"
-            },
-            {
-              "name": "lead_id",
-              "value": "={{ $node['Create Lead in Airtable'].json.id }}"
-            }
-          ]
-        },
         "options": {}
       },
-      "id": "e6g7h8i9-j0k1-l2m3-n4o5-p6q7r8s9t0u1",
-      "name": "Success Response",
+      "id": "2825e327-55e5-4278-bcfd-bbd46a2fea22",
+      "name": "Success Response1",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3,
-      "position": [1250, 200]
-    },
-    {
-      "parameters": {
-        "values": {
-          "string": [
-            {
-              "name": "status",
-              "value": "error"
-            },
-            {
-              "name": "message",
-              "value": "Invalid email format provided"
-            },
-            {
-              "name": "error_details",
-              "value": "={{ JSON.stringify($json) }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "f7h8i9j0-k1l2-m3n4-o5p6-q7r8s9t0u1v2",
-      "name": "Error Response - Invalid Email",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3,
-      "position": [850, 400]
+      "position": [
+        60,
+        420
+      ]
     },
     {
       "parameters": {
         "options": {}
       },
-      "id": "g8i9j0k1-l2m3-n4o5-p6q7-r8s9t0u1v2w3",
-      "name": "Webhook Response",
+      "id": "f9b8b59b-fd62-47cf-b28f-7f53fb775cb0",
+      "name": "Error Response - Invalid Email1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        -340,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "f3e549a3-f4eb-4ef0-99d2-bd059b6f9a39",
+      "name": "Webhook Response1",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1450, 300]
+      "position": [
+        260,
+        520
+      ]
     },
     {
       "parameters": {
@@ -243,206 +342,123 @@
           "value": "Error_Log",
           "mode": "list"
         },
-        "options": {},
-        "fields": {
-          "fieldsUi": {
-            "fieldValues": [
-              {
-                "fieldName": "Timestamp",
-                "fieldValue": "={{ $now }}"
-              },
-              {
-                "fieldName": "Error Type",
-                "fieldValue": "Invalid Email"
-              },
-              {
-                "fieldName": "Raw Data",
-                "fieldValue": "={{ JSON.stringify($node['Webhook - Typeform Trigger'].json) }}"
-              },
-              {
-                "fieldName": "Email Attempted",
-                "fieldValue": "={{ $json.email }}"
-              }
-            ]
-          }
-        }
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
       },
-      "id": "h9j0k1l2-m3n4-o5p6-q7r8-s9t0u1v2w3x4",
-      "name": "Log Error to Airtable",
+      "id": "d1f8ec6b-64c6-4a71-9789-c943ac83bb7f",
+      "name": "Log Error to Airtable1",
       "type": "n8n-nodes-base.airtable",
       "typeVersion": 2,
-      "position": [1050, 400],
+      "position": [
+        -100,
+        660
+      ],
       "credentials": {
-        "airtableApi": {
-          "id": "1",
-          "name": "Airtable API"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "triggerTimes": {
-          "item": [
-            {
-              "mode": "everyMinute",
-              "minute": 5
-            }
-          ]
-        }
-      },
-      "id": "i0k1l2m3-n4o5-p6q7-r8s9-t0u1v2w3x4y5",
-      "name": "Schedule Trigger - Retry Failed",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.1,
-      "position": [250, 600]
-    },
-    {
-      "parameters": {
-        "operation": "search",
-        "base": {
-          "__rl": true,
-          "value": "YOUR_AIRTABLE_BASE_ID",
-          "mode": "list"
-        },
-        "table": {
-          "__rl": true,
-          "value": "Error_Log",
-          "mode": "list"
-        },
-        "options": {
-          "fields": [
-            "Email Attempted",
-            "Raw Data",
-            "Retry Count"
-          ],
-          "filterByFormula": "AND({Retry Count} < 3, {Status} != 'Resolved')",
-          "sort": {
-            "sortFieldsUi": {
-              "sortFields": [
-                {
-                  "fieldName": "Timestamp",
-                  "order": "asc"
-                }
-              ]
-            }
-          },
-          "maxRecords": 10
-        }
-      },
-      "id": "j1l2m3n4-o5p6-q7r8-s9t0-u1v2w3x4y5z6",
-      "name": "Get Failed Leads for Retry",
-      "type": "n8n-nodes-base.airtable",
-      "typeVersion": 2,
-      "position": [450, 600],
-      "credentials": {
-        "airtableApi": {
-          "id": "1",
-          "name": "Airtable API"
+        "airtableTokenApi": {
+          "id": "bNmH8B242tsq8lrS",
+          "name": "Airtable Personal Access Token account"
         }
       }
     }
   ],
+  "pinData": {},
   "connections": {
-    "Webhook - Typeform Trigger": {
+    "Webhook - Typeform Trigger1": {
       "main": [
         [
           {
-            "node": "Extract & Format Lead Data",
+            "node": "Extract & Format Lead Data1",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Extract & Format Lead Data": {
+    "Extract & Format Lead Data1": {
       "main": [
         [
           {
-            "node": "Validate Email Format",
+            "node": "Validate Email Format1",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Validate Email Format": {
+    "Validate Email Format1": {
       "main": [
         [
           {
-            "node": "Create Lead in Airtable",
+            "node": "Create Lead in Airtable1",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Error Response - Invalid Email",
+            "node": "Error Response - Invalid Email1",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Create Lead in Airtable": {
+    "Create Lead in Airtable1": {
       "main": [
         [
           {
-            "node": "Send Welcome Email",
+            "node": "Send Welcome Email1",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Send Welcome Email": {
+    "Send Welcome Email1": {
       "main": [
         [
           {
-            "node": "Success Response",
+            "node": "Success Response1",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Success Response": {
+    "Success Response1": {
       "main": [
         [
           {
-            "node": "Webhook Response",
+            "node": "Webhook Response1",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Error Response - Invalid Email": {
+    "Error Response - Invalid Email1": {
       "main": [
         [
           {
-            "node": "Log Error to Airtable",
+            "node": "Log Error to Airtable1",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Log Error to Airtable": {
+    "Log Error to Airtable1": {
       "main": [
         [
           {
-            "node": "Webhook Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Schedule Trigger - Retry Failed": {
-      "main": [
-        [
-          {
-            "node": "Get Failed Leads for Retry",
+            "node": "Webhook Response1",
             "type": "main",
             "index": 0
           }
@@ -450,33 +466,39 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
-    "executionOrder": "v1",
-    "saveManualExecutions": true,
-    "callerPolicy": "workflowsFromSameOwner",
-    "errorWorkflow": ""
+    "executionOrder": "v1"
   },
-  "versionId": "9d8e5f6g-7h8i-9j0k-1l2m-3n4o5p6q7r8s",
-  "id": "lead-loop-starter-workflow",
+  "versionId": "d4899230-0f27-4469-8251-52f12e0472f4",
   "meta": {
-    "instanceId": "n8n-lead-capture-instance"
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1b5da9a108e1818c1d1602c3ce5fabe8c3dccf81b2fd743c4ce5dbb881ee320f"
   },
+  "id": "yzFqxmNdwPi7PLHu",
   "tags": [
     {
-      "id": "1",
-      "name": "lead-capture"
+      "name": "lead-capture",
+      "id": "ZHi9KqYlGZM4Fucd",
+      "createdAt": "2025-06-25T00:01:59.391Z",
+      "updatedAt": "2025-06-25T00:01:59.391Z"
     },
     {
-      "id": "2", 
-      "name": "typeform"
+      "name": "typeform",
+      "id": "W7KeQvZMXkc72vI2",
+      "createdAt": "2025-06-25T00:01:59.422Z",
+      "updatedAt": "2025-06-25T00:01:59.422Z"
     },
     {
-      "id": "3",
-      "name": "airtable"
+      "name": "airtable",
+      "id": "AEDKaN3nf2xdcJwM",
+      "createdAt": "2025-06-25T00:01:59.448Z",
+      "updatedAt": "2025-06-25T00:01:59.448Z"
     },
     {
-      "id": "4",
+      "createdAt": "2025-06-17T06:11:21.971Z",
+      "updatedAt": "2025-06-17T06:11:21.971Z",
+      "id": "nMqnjK0mmKSAygSR",
       "name": "email-automation"
     }
   ]
