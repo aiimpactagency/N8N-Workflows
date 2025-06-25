@@ -1,0 +1,483 @@
+{
+  "name": "Lead Loop Starter - Typeform to Airtable with Email",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "typeform-leads",
+        "responseMode": "responseNode",
+        "options": {
+          "responseContentType": "application/json",
+          "responsePropertyName": "data",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "e1b0f3d4-8c9a-4b2e-9f3d-1a2b3c4d5e6f",
+      "name": "Webhook - Typeform Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "typeform-lead-capture"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "name",
+              "value": "={{ $json.form_response.answers.find(item => item.field.ref === 'name_field')?.text || $json.form_response.answers.find(item => item.type === 'short_text')?.short_text || 'Unknown' }}"
+            },
+            {
+              "name": "email",
+              "value": "={{ $json.form_response.answers.find(item => item.field.ref === 'email_field')?.email || $json.form_response.answers.find(item => item.type === 'email')?.email || '' }}"
+            },
+            {
+              "name": "interest",
+              "value": "={{ $json.form_response.answers.find(item => item.field.ref === 'interest_field')?.choice?.label || $json.form_response.answers.find(item => item.type === 'choice')?.choice?.label || 'General Inquiry' }}"
+            },
+            {
+              "name": "source",
+              "value": "={{ $json.form_response.hidden?.source || 'Typeform Direct' }}"
+            },
+            {
+              "name": "submitted_at",
+              "value": "={{ $json.form_response.submitted_at }}"
+            },
+            {
+              "name": "form_id",
+              "value": "={{ $json.form_response.form_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a2c3d4e5-f6g7-h8i9-j0k1-l2m3n4o5p6q7",
+      "name": "Extract & Format Lead Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.email }}",
+              "operation": "regex",
+              "value2": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+            }
+          ]
+        }
+      },
+      "id": "b3d4e5f6-g7h8-i9j0-k1l2-m3n4o5p6q7r8",
+      "name": "Validate Email Format",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "YOUR_AIRTABLE_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "Leads",
+          "mode": "list"
+        },
+        "options": {
+          "returnFields": [
+            "id",
+            "Name",
+            "Email",
+            "Status"
+          ]
+        },
+        "fields": {
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldName": "Name",
+                "fieldValue": "={{ $json.name }}"
+              },
+              {
+                "fieldName": "Email",
+                "fieldValue": "={{ $json.email }}"
+              },
+              {
+                "fieldName": "Interest",
+                "fieldValue": "={{ $json.interest }}"
+              },
+              {
+                "fieldName": "Source",
+                "fieldValue": "={{ $json.source }}"
+              },
+              {
+                "fieldName": "Submitted At",
+                "fieldValue": "={{ $json.submitted_at }}"
+              },
+              {
+                "fieldName": "Status",
+                "fieldValue": "New"
+              }
+            ]
+          }
+        }
+      },
+      "id": "c4e5f6g7-h8i9-j0k1-l2m3-n4o5p6q7r8s9",
+      "name": "Create Lead in Airtable",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [850, 200],
+      "credentials": {
+        "airtableApi": {
+          "id": "1",
+          "name": "Airtable API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $credentials.email }}",
+        "toEmail": "={{ $node['Extract & Format Lead Data'].json.email }}",
+        "subject": "Welcome {{ $node['Extract & Format Lead Data'].json.name }}! Thanks for your interest",
+        "text": "Hi {{ $node['Extract & Format Lead Data'].json.name }},\n\nThank you for your interest in {{ $node['Extract & Format Lead Data'].json.interest }}!\n\nWe're excited to connect with you and will follow up soon with more information tailored to your specific needs.\n\nIn the meantime, feel free to reply to this email if you have any immediate questions.\n\nBest regards,\n[Your Team Name]",
+        "options": {
+          "replyTo": "support@yourcompany.com"
+        }
+      },
+      "id": "d5f6g7h8-i9j0-k1l2-m3n4-o5p6q7r8s9t0",
+      "name": "Send Welcome Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [1050, 200],
+      "credentials": {
+        "smtp": {
+          "id": "2",
+          "name": "Email SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "success"
+            },
+            {
+              "name": "message",
+              "value": "Lead captured and email sent successfully"
+            },
+            {
+              "name": "lead_id",
+              "value": "={{ $node['Create Lead in Airtable'].json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e6g7h8i9-j0k1-l2m3-n4o5-p6q7r8s9t0u1",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [1250, 200]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "error"
+            },
+            {
+              "name": "message",
+              "value": "Invalid email format provided"
+            },
+            {
+              "name": "error_details",
+              "value": "={{ JSON.stringify($json) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f7h8i9j0-k1l2-m3n4-o5p6-q7r8s9t0u1v2",
+      "name": "Error Response - Invalid Email",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "g8i9j0k1-l2m3-n4o5-p6q7-r8s9t0u1v2w3",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1450, 300]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "YOUR_AIRTABLE_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "Error_Log",
+          "mode": "list"
+        },
+        "options": {},
+        "fields": {
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldName": "Timestamp",
+                "fieldValue": "={{ $now }}"
+              },
+              {
+                "fieldName": "Error Type",
+                "fieldValue": "Invalid Email"
+              },
+              {
+                "fieldName": "Raw Data",
+                "fieldValue": "={{ JSON.stringify($node['Webhook - Typeform Trigger'].json) }}"
+              },
+              {
+                "fieldName": "Email Attempted",
+                "fieldValue": "={{ $json.email }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "h9j0k1l2-m3n4-o5p6-q7r8-s9t0u1v2w3x4",
+      "name": "Log Error to Airtable",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [1050, 400],
+      "credentials": {
+        "airtableApi": {
+          "id": "1",
+          "name": "Airtable API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyMinute",
+              "minute": 5
+            }
+          ]
+        }
+      },
+      "id": "i0k1l2m3-n4o5-p6q7-r8s9-t0u1v2w3x4y5",
+      "name": "Schedule Trigger - Retry Failed",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 600]
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "YOUR_AIRTABLE_BASE_ID",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "Error_Log",
+          "mode": "list"
+        },
+        "options": {
+          "fields": [
+            "Email Attempted",
+            "Raw Data",
+            "Retry Count"
+          ],
+          "filterByFormula": "AND({Retry Count} < 3, {Status} != 'Resolved')",
+          "sort": {
+            "sortFieldsUi": {
+              "sortFields": [
+                {
+                  "fieldName": "Timestamp",
+                  "order": "asc"
+                }
+              ]
+            }
+          },
+          "maxRecords": 10
+        }
+      },
+      "id": "j1l2m3n4-o5p6-q7r8-s9t0-u1v2w3x4y5z6",
+      "name": "Get Failed Leads for Retry",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2,
+      "position": [450, 600],
+      "credentials": {
+        "airtableApi": {
+          "id": "1",
+          "name": "Airtable API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Typeform Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract & Format Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract & Format Lead Data": {
+      "main": [
+        [
+          {
+            "node": "Validate Email Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Email Format": {
+      "main": [
+        [
+          {
+            "node": "Create Lead in Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Response - Invalid Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Lead in Airtable": {
+      "main": [
+        [
+          {
+            "node": "Send Welcome Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Welcome Email": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Success Response": {
+      "main": [
+        [
+          {
+            "node": "Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Response - Invalid Email": {
+      "main": [
+        [
+          {
+            "node": "Log Error to Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Error to Airtable": {
+      "main": [
+        [
+          {
+            "node": "Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger - Retry Failed": {
+      "main": [
+        [
+          {
+            "node": "Get Failed Leads for Retry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "versionId": "9d8e5f6g-7h8i-9j0k-1l2m-3n4o5p6q7r8s",
+  "id": "lead-loop-starter-workflow",
+  "meta": {
+    "instanceId": "n8n-lead-capture-instance"
+  },
+  "tags": [
+    {
+      "id": "1",
+      "name": "lead-capture"
+    },
+    {
+      "id": "2", 
+      "name": "typeform"
+    },
+    {
+      "id": "3",
+      "name": "airtable"
+    },
+    {
+      "id": "4",
+      "name": "email-automation"
+    }
+  ]
+}
