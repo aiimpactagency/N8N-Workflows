@@ -1,3 +1,4 @@
+📣 Automated Social Media Content Generation Workflow
 Automated Social Media Content Generation Workflow
 This N8N automation helps you instantly generate platform-optimized content for LinkedIn, Instagram, Facebook, Twitter/X, TikTok, Threads, and YouTube Shorts. It uses SERP research + GPT-4 to create custom content tailored to each platform's audience and algorithm.
 
