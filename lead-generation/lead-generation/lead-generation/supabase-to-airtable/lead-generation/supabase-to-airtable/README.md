@@ -19,8 +19,8 @@ This automation captures new leads added to a Supabase table, validates the emai
 
 ## 📄 Documentation
 
-📘 [Overview – What This Workflow Does](./overview.md)  
-🛠️ [Setup Instructions – How to Use It](./setup-instructions.md)
+📘 [Overview – What This Workflow Does]
+🛠️ [Setup Instructions – How to Use It]
 
 ---
 
